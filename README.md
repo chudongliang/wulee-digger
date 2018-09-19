@@ -1,1 +1,2 @@
-To be added
+Mongo DB Structure:
+

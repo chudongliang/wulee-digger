@@ -15,8 +15,18 @@ setuptools.setup(
     keywords=['testing', 'logging', 'example'], # arbitrary keywords
     include_package_data=True,
     install_requires=[
+        'Twisted>=13.1.0',
+        'w3lib>=1.17.0',
+        'queuelib',
+        'lxml',
+        'pyOpenSSL',
+        'cssselect>=0.9',
+        'six>=1.5.2',
+        'parsel>=1.4',
+        'PyDispatcher>=2.0.5',
+        'service_identity',
         'jinja2',
-        'requests_oauth',
+        'scrapy',
     ],
     classifiers=[],
 )
