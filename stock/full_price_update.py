@@ -16,11 +16,16 @@ from news import test
 
 test.c()
 import settings
-
+import datetime
 client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
 
+from data.stock.daily_price import DailyPrice
 db = client.temporary
 collection = db.price_url
+
+
+
+
 
 stock = client.stock
 daily_price = stock.daily_price
@@ -52,11 +57,17 @@ class FullPriceSpider(scrapy.Spider):
 
                 item = k.split(b',')
 
-                query = {'id': code.decode('utf-8'), 'date': item[0].decode('utf-8')}
+                datestring = item[0].decode('utf-8').split('-')
+                date = datetime.datetime(int(datestring[0]), int(datestring[1]), int(datestring[2]))
+
+
+
+                query = {'id': code.decode('utf-8'), 'date': date}
+
                 exist = daily_price.find_one(query)
                 if not exist:
                     if len(item)>8:
-                        post = { '$set': { 'id': code.decode('utf-8') , 'date': item[0].decode('utf-8')
+                        post = { '$set': { 'id': code.decode('utf-8') , 'date': date
                             , 'open': item[1].decode('utf-8')
                             , 'close': item[2].decode('utf-8')
                             , 'high': item[3].decode('utf-8')
@@ -66,7 +77,7 @@ class FullPriceSpider(scrapy.Spider):
                             , 'amplitude': item[7].decode('utf-8')
                             , 'turnover': item[8].decode('utf-8')} }
                     else:
-                        post = {'$set': {'id': code.decode('utf-8'), 'date': item[0].decode('utf-8')
+                        post = {'$set': {'id': code.decode('utf-8'), 'date': date
                             , 'open': item[1].decode('utf-8')
                             , 'close': item[2].decode('utf-8')
                             , 'high': item[3].decode('utf-8')
@@ -75,5 +86,5 @@ class FullPriceSpider(scrapy.Spider):
                             , 'amount': item[6].decode('utf-8')
                             , 'amplitude': item[7].decode('utf-8')
                             , 'turnover': ''}}
-                    query = {'id': code.decode('utf-8') , 'date': item[0].decode('utf-8')}
+                    query = {'id': code.decode('utf-8') , 'date': date}
                     post_id = daily_price.update_one(query,post,True)

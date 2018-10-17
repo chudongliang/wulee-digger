@@ -15,7 +15,12 @@ import sys
 sys.path.insert(0, '/stock/')
 sys.path.insert(0, '/news/')
 
+#from data.stock.min_price import MinPrice
 
+#a = MinPrice(2,'2',4)
+
+#print(type(a.id))
+#exit()
 
 #process = CrawlerProcess({
 #    'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)',
@@ -33,18 +38,19 @@ process1 = CrawlerProcess({
     'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)',
     #'DOWNLOAD_DELAY': 1,
     #'RETRY_HTTP_CODES': {500, 502, 503, 504, 522, 524, 408, 456},
-    'COOKIES_ENABLED': False
+    #'CONCURRENT_REQUESTS_PER_IP': 32,
+    #'CONCURRENT_REQUESTS_PER_DOMAIN':32,
+    #'COOKIES_ENABLED': False
+    #'COOKIES_ENABLED': False
 })
 from stock import ticker
-ticker.TickerPriceSpider.download_delay = 1.2
-process1.crawl(ticker.TickerPriceSpider())
-#ticker.TickerTodayPriceSpider.CONCURRENT_REQUESTS_PER_IP = 2
+ticker.TickerTodayPriceSpider.CONCURRENT_REQUESTS_PER_IP = 2
 process1.crawl(ticker.TickerTodayPriceSpider())
 
-#from stock import full_price_update
-#process1.crawl(full_price_update.FullPriceSpider())
+from stock import full_price_update
+process1.crawl(full_price_update.FullPriceSpider())
 
-#from stock import min_price_update
-#process1.crawl(min_price_update.MinPriceDailySpider())
+from stock import min_price_update
+process1.crawl(min_price_update.MinPriceDailySpider())
 
 process1.start()

@@ -20,12 +20,12 @@ for v in fundamental.find({},no_cursor_timeout=True):
     if v['market'] == '2':
         m = 'XSHE'
 
-    start = datetime(2018, 9, 12, 0, 0, 0)
-    end = datetime(2018, 9, 13, 0, 0, 0)
+    start = datetime(2018, 8, 31, 0, 0, 0)
+    end = datetime(2018, 9, 1, 0, 0, 0)
     if not min_price.count({'id': v['id'], 'date': {'$gte' : start,'$lte' : end}}) == 240:
         print(v['id'])
         try:
-            price = get_price(v['id']+'.'+m, '2018-09-12', '2018-09-13', frequency='1m', fields=None, skip_paused=True, fq='none')
+            price = get_price(v['id']+'.'+m, '2018-08-31', '2018-09-01', frequency='1m', fields=None, skip_paused=True, fq='none')
             price =  price.to_dict('index')
             for i in price:
                 post = {'$set': {'id': v['id'], 'date': i

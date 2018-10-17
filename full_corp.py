@@ -16,14 +16,18 @@ import ast
 import sys
 sys.path.insert(0, '/stock/')
 sys.path.insert(0, '/news/')
-from stock import fun
+from stock import dividends_special
 
 configure_logging()
 runner = CrawlerRunner()
 
 @defer.inlineCallbacks
 def crawl():
-    yield runner.crawl(fun.FunSpider())
+    #dividends.FullCorporateActionSpider.download_delay = 1.2
+    #yield runner.crawl(dividends.FullCorporateActionSpider())
+
+    dividends_special.FullCorporateSpecialActionSpider.download_delay = 1.2
+    yield runner.crawl(dividends_special.FullCorporateSpecialActionSpider())
     reactor.stop()
 
 crawl()

@@ -21,9 +21,12 @@ from stock import fun
 configure_logging()
 runner = CrawlerRunner()
 
+from stock import ticker_history
+ticker_history.TickerPriceSpider.download_delay = 1.2
+
 @defer.inlineCallbacks
 def crawl():
-    yield runner.crawl(fun.FunSpider())
+    yield runner.crawl(ticker_history.TickerPriceSpider())
     reactor.stop()
 
 crawl()

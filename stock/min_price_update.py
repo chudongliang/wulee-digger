@@ -26,6 +26,8 @@ db1 = client.stock
 min_price = db1.min_price
 min_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
+#from data.stock.min_price import MinPrice
+
 class MinPriceDailySpider(scrapy.Spider):
 
     name = 'min_price_daily_spider'

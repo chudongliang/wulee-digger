@@ -21,9 +21,15 @@ from stock import fun
 configure_logging()
 runner = CrawlerRunner()
 
+from stock import ticker
+#ticker.TickerPriceSpider.download_delay = 1.2
+#process1.crawl(ticker.TickerPriceSpider())
+#ticker.TickerTodayPriceSpider.CONCURRENT_REQUESTS_PER_IP = 2
+#process1.crawl(ticker.TickerTodayPriceSpider())
+
 @defer.inlineCallbacks
 def crawl():
-    yield runner.crawl(fun.FunSpider())
+    yield runner.crawl(ticker.TickerTodayPriceSpider())
     reactor.stop()
 
 crawl()
