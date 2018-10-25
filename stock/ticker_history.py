@@ -35,8 +35,8 @@ class TickerPriceSpider(scrapy.Spider):
 
     name = 'ticker_price_spider'
 
-    start_date = datetime.datetime(2018, 10, 10)
-    end_date = datetime.datetime(2018, 10, 12)
+    start_date = datetime.datetime(2018, 10, 20)
+    end_date = datetime.datetime(2018, 10, 24)
 
     daily_price = stock.daily_price
     daily_price = daily_price.find({'date': {'$gt': start_date, '$lt': end_date}}, no_cursor_timeout=True).sort('date',1)

@@ -30,15 +30,14 @@ stock = client.stock
 ticker_price = stock.ticker_price
 ticker_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
-
+sort_order = 1
 
 class TickerTodayPriceSpider(scrapy.Spider):
-
 
     name = 'ticker_today_price_spider'
 
     fundamental = stock.fundamental
-    result = fundamental.find({}, no_cursor_timeout=True).sort("_id", 1)
+    result = fundamental.find({}, no_cursor_timeout=True).sort("_id", sort_order)
 
     stock_list = []
     for stock_detail in result:
