@@ -1,7 +1,5 @@
 #!/bin/bash
 
-sleep 3600
-
 # refresh fundamental
 python3 main.py > main.log
 
