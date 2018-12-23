@@ -1,7 +1,7 @@
 from jqdatasdk import *
 from pymongo import MongoClient
 auth('13917567679','cmhorse888')
-from datetime import datetime
+import datetime
 
 client = MongoClient("127.0.0.1",27017)
 db = client.stock
@@ -20,12 +20,15 @@ for v in fundamental.find({},no_cursor_timeout=True):
     if v['market'] == '2':
         m = 'XSHE'
 
-    start = datetime(2018, 8, 31, 0, 0, 0)
-    end = datetime(2018, 9, 1, 0, 0, 0)
+    start = datetime.datetime(2018, 12, 17, 0, 0, 0)
+    end = datetime.datetime(2018, 12, 18, 0, 0, 0)
+    
+
+    
     if not min_price.count({'id': v['id'], 'date': {'$gte' : start,'$lte' : end}}) == 240:
         print(v['id'])
         try:
-            price = get_price(v['id']+'.'+m, '2018-08-31', '2018-09-01', frequency='1m', fields=None, skip_paused=True, fq='none')
+            price = get_price(v['id']+'.'+m, '2018-12-17', '2018-12-18', frequency='1m', fields=None, skip_paused=True, fq='none')
             price =  price.to_dict('index')
             for i in price:
                 post = {'$set': {'id': v['id'], 'date': i
@@ -35,6 +38,7 @@ for v in fundamental.find({},no_cursor_timeout=True):
                     , 'low': price[i]['low']
                     , 'volume': price[i]['volume']
                     , 'amount': price[i]['money']}}
+        
                 query = {'id': v['id'], 'date': i}
                 post_id = min_price.update_one(query, post, True)
         except Exception as e: print(e)
