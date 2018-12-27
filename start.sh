@@ -1,12 +1,16 @@
 #!/bin/bash
 
+cd /Users/ChuE/wulee-digger
+
+
+
 # refresh fundamental
-python3 main.py > main.log
+/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 main.py 
 
 # refresh update url for missing one
-python3 test.py >> main.log
+/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 test.py 
 
-sleep 1000
+#sleep 1000
 
 # refresh ticker price ,full price , min_daily
-python3 backup.py >> main.log
+/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 backup.py 
