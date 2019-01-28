@@ -50,6 +50,14 @@ process1.crawl(ticker.TickerTodayPriceSpider())
 ticker.sort_order = -1
 process1.crawl(ticker.TickerTodayPriceSpider())
 
+ticker.sort_order = -1
+ticker.market = "2"
+process1.crawl(ticker.TickerTodayPriceSpider())
+
+ticker.sort_order = 1
+ticker.market = "2"
+process1.crawl(ticker.TickerTodayPriceSpider())
+
 from stock import full_price_update
 process1.crawl(full_price_update.FullPriceSpider())
 
