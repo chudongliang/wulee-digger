@@ -12,6 +12,7 @@ import gzip
 import ast
 
 import sys
+from hamcrest.core.core.isnone import none
 sys.path.insert(0, '/stock/')
 sys.path.insert(0, '/news/')
 
@@ -44,19 +45,14 @@ process1 = CrawlerProcess({
     #'COOKIES_ENABLED': False
 })
 from stock import ticker
-ticker.TickerTodayPriceSpider.CONCURRENT_REQUESTS_PER_IP = 2
+ticker.TickerTodayPriceSpider.CONCURRENT_REQUESTS_PER_IP = 4
 process1.crawl(ticker.TickerTodayPriceSpider())
 
-ticker.sort_order = -1
-process1.crawl(ticker.TickerTodayPriceSpider())
+process1.crawl(ticker.TickerTodayPriceSpider1())
 
-ticker.sort_order = -1
-ticker.market = "2"
-process1.crawl(ticker.TickerTodayPriceSpider())
+process1.crawl(ticker.TickerTodayPriceSpider2())
 
-ticker.sort_order = 1
-ticker.market = "2"
-process1.crawl(ticker.TickerTodayPriceSpider())
+process1.crawl(ticker.TickerTodayPriceSpider3())
 
 from stock import full_price_update
 process1.crawl(full_price_update.FullPriceSpider())
