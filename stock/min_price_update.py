@@ -12,9 +12,6 @@ import gzip
 import ast
 import sys
 
-from news import test
-
-test.c()
 import settings
 import datetime
 client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
@@ -26,6 +23,15 @@ db1 = client.stock
 min_price = db1.min_price
 min_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
+import psycopg2
+
+connection = psycopg2.connect(user="postgres",
+                                  password="cmhorse888",
+                                  host="127.0.0.1",
+                                  port="5432",
+                                  database="stock")
+cursor = connection.cursor()
+
 #from data.stock.min_price import MinPrice
 
 class MinPriceDailySpider(scrapy.Spider):
@@ -33,8 +39,12 @@ class MinPriceDailySpider(scrapy.Spider):
     name = 'min_price_daily_spider'
 
     start_urls = []
-    for v in collection.find({}, no_cursor_timeout=True):
-        start_urls.append('http://' + v['url'].replace("type=k","type=m1"))
+    
+    cursor.execute("SELECT * from public.price_url")
+    rows = cursor.fetchall()
+    
+    for v in rows:
+        start_urls.append('http://' + v[1].replace("type=k","type=m1"))
 
     def parse(self, response):
 
@@ -43,9 +53,6 @@ class MinPriceDailySpider(scrapy.Spider):
             request_url = response.request.url
             stock_id = request_url.split('id=')
             stock_id = stock_id[1][0:6]
-
-
-
 
             code = response.body.split(b'\r\n')
 
@@ -62,23 +69,35 @@ class MinPriceDailySpider(scrapy.Spider):
 
                 if date_time>start_time and date_time<=end_time:
 
+                    open = float(row[1].decode('utf-8'))  
+                    close = float(row[4].decode('utf-8'))
+                    high = float(row[2].decode('utf-8'))
+                    low = float(row[3].decode('utf-8'))
+        
 
-
-                    post = {'$set': {'id': stock_id, 'date': date_time
-                        , 'open': float(row[1].decode('utf-8'))
-                        , 'close': float(row[4].decode('utf-8'))
-                        , 'high': float(row[2].decode('utf-8'))
-                        , 'low': float(row[3].decode('utf-8'))
-                        , 'volume': float(row[6].decode('utf-8'))
-                        , 'amount': float(row[7].decode('utf-8'))}}
-                    query = {'id': stock_id, 'date': date_time}
-                    post_id = min_price.update_one(query, post, True)
-
-                    #print(row[0])
-
-
-
-
-
-
-                #post_id = daily_price.update_one(query,post,True)
+                    #post = {'$set': {'id': stock_id, 'date': date_time
+                    #    , 'open': float(row[1].decode('utf-8'))
+                    #    , 'close': float(row[4].decode('utf-8'))
+                    #    , 'high': float(row[2].decode('utf-8'))
+                    #    , 'low': float(row[3].decode('utf-8'))
+                    #    , 'volume': float(row[6].decode('utf-8'))
+                    #    , 'amount': float(row[7].decode('utf-8'))}}
+                    #query = {'id': stock_id, 'date': date_time}
+                    #post_id = min_price.update_one(query, post, True)
+                    
+                    
+            
+                    #print(date_time)
+                    #exit()
+                    cursor.execute("SELECT * from public.min_price where id=%s AND date=%s", (stock_id,date_time))
+                    dp = cursor.fetchone()
+                
+                    if dp is None:
+            
+                        postgres_insert_query = "INSERT INTO min_price (id,date,open,close,high,low,volume,amount) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+                        record_to_insert = (stock_id, date_time, open, close, high, low, float(row[6].decode('utf-8')), float(row[7].decode('utf-8')),)
+                        
+                      
+                        cursor.execute(postgres_insert_query, record_to_insert)
+                        connection.commit()
+          

@@ -2,7 +2,7 @@
 # run the script by scrapy runspider fun.py
 from __future__ import division
 import scrapy
-from pymongo import MongoClient
+import psycopg2
 
 from scrapy.selector import Selector
 import re
@@ -12,17 +12,9 @@ import gzip
 import ast
 import sys
 
-from news import test
+from common.db import Postgres
 
-test.c()
-import settings
-
-client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
-
-db = client.stock
-collection = db.fundamental
-db.fundamental.create_index('id', unique=True)
-db.fundamental.create_index('name', unique=True)
+db = Postgres()
 
 class FunSpider(scrapy.Spider):
     name = 'fun_spider'
@@ -39,7 +31,12 @@ class FunSpider(scrapy.Spider):
                 item = k.split(b',')
                 print(item[1].decode('utf-8'))
                 print(item[2].decode('utf-8'))
-                post = { '$set': { 'name': item[2].decode('utf-8') , 'market': item[0].decode('utf-8')} }
-                query = {'id': item[1].decode('utf-8')}
+                
+                postgres_insert_query = "INSERT INTO fundamental VALUES (%s,%s,%s) ON CONFLICT (id) DO UPDATE SET name = %s"
 
-                post_id = collection.update_one(query,post,True)
+                record_to_insert = (item[1].decode('utf-8'), item[0].decode('utf-8'), item[2].decode('utf-8'), item[2].decode('utf-8'))
+                db.insert(postgres_insert_query, record_to_insert)
+               
+            db.commit()
+            count = db.cur.rowcount
+            print (count, "Record inserted successfully into fundamental table")

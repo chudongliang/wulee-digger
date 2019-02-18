@@ -11,10 +11,8 @@ import json
 import gzip
 import ast
 import sys
+import psycopg2
 
-from news import test
-
-test.c()
 import settings
 import datetime
 client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
@@ -24,6 +22,12 @@ db = client.temporary
 collection = db.price_url
 
 
+connection = psycopg2.connect(user="postgres",
+                                  password="cmhorse888",
+                                  host="127.0.0.1",
+                                  port="5432",
+                                  database="stock")
+cursor = connection.cursor()
 
 
 
@@ -36,8 +40,14 @@ class FullPriceSpider(scrapy.Spider):
     name = 'full_price_spider'
 
     start_urls = []
-    for v in collection.find({}, no_cursor_timeout=True):
-        start_urls.append('http://' + v['url'])
+    
+    
+    cursor.execute("SELECT * from public.price_url")
+    rows = cursor.fetchall()
+    
+    
+    for v in rows:
+        start_urls.append('http://' + v[1])
 
     def parse(self, response):
 
@@ -58,14 +68,18 @@ class FullPriceSpider(scrapy.Spider):
                 item = k.split(b',')
 
                 datestring = item[0].decode('utf-8').split('-')
-                date = datetime.datetime(int(datestring[0]), int(datestring[1]), int(datestring[2]))
+                date = datetime.date(int(datestring[0]), int(datestring[1]), int(datestring[2]))
 
+      
 
-
-                query = {'id': code.decode('utf-8'), 'date': date}
-
-                exist = daily_price.find_one(query)
-                if not exist:
+                #query = {'id': code.decode('utf-8'), 'date': date}
+                #exist = daily_price.find_one(query)
+            
+                
+                cursor.execute("SELECT * from public.daily_price where id=%s AND date=%s", (code.decode('utf-8'),date))
+                dp = cursor.fetchone()
+                
+                if dp is None:
                     if len(item)>8:
                         post = { '$set': { 'id': code.decode('utf-8') , 'date': date
                             , 'open': item[1].decode('utf-8')
@@ -76,6 +90,9 @@ class FullPriceSpider(scrapy.Spider):
                             , 'amount': item[6].decode('utf-8')
                             , 'amplitude': item[7].decode('utf-8')
                             , 'turnover': item[8].decode('utf-8')} }
+                        
+                        postgres_insert_query = "INSERT INTO daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                        record_to_insert = (code.decode('utf-8'), date, item[1].decode('utf-8'), item[2].decode('utf-8'), item[3].decode('utf-8'), item[4].decode('utf-8'), item[5].decode('utf-8'), item[6].decode('utf-8'), item[8].decode('utf-8') ,item[7].decode('utf-8'),)
                     else:
                         post = {'$set': {'id': code.decode('utf-8'), 'date': date
                             , 'open': item[1].decode('utf-8')
@@ -86,5 +103,12 @@ class FullPriceSpider(scrapy.Spider):
                             , 'amount': item[6].decode('utf-8')
                             , 'amplitude': item[7].decode('utf-8')
                             , 'turnover': ''}}
-                    query = {'id': code.decode('utf-8') , 'date': date}
-                    post_id = daily_price.update_one(query,post,True)
+                    
+                        postgres_insert_query = "INSERT INTO daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                        record_to_insert = (code.decode('utf-8'), date, item[1].decode('utf-8'), item[2].decode('utf-8'), item[3].decode('utf-8'), item[4].decode('utf-8'), item[5].decode('utf-8'), item[6].decode('utf-8'), 0 ,item[7].decode('utf-8'),)
+                    #postgres_insert_query = "INSERT INTO daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                    #record_to_insert = (code.decode('utf-8'), date, item[1].decode('utf-8'), item[2].decode('utf-8'), item[3].decode('utf-8'), item[4].decode('utf-8'), item[5].decode('utf-8'), item[6].decode('utf-8'), 0 ,item[7].decode('utf-8'),)
+                 
+                    cursor.execute(postgres_insert_query, record_to_insert)
+                    connection.commit()
+                    

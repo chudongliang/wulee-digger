@@ -30,16 +30,22 @@ stock = client.stock
 ticker_price = stock.ticker_price
 ticker_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
-market = "1"
+import psycopg2
+connection = psycopg2.connect(user="postgres",
+                                  password="cmhorse888",
+                                  host="127.0.0.1",
+                                  port="5432",
+                                  database="stock")
+cursor = connection.cursor()
 
 class TickerTodayPriceSpider(scrapy.Spider):
     name = 'ticker_today_price_spider'
-    fundamental = stock.fundamental
-    result = fundamental.find({'market':'1'}, no_cursor_timeout=True).sort("_id", 1)
 
+    cursor.execute("SELECT * from public.fundamental where market='1' order by id ASC")
+    result = cursor.fetchall()
     stock_list = []
     for stock_detail in result:
-        stock_list.append([stock_detail['id'],stock_detail['market']])
+        stock_list.append([stock_detail[0],stock_detail[1]])
 
     start_urls = ['http://gu.qq.com/sh000001/zs']
     date = ""
@@ -59,7 +65,10 @@ class TickerTodayPriceSpider(scrapy.Spider):
             while loop:
                 stock_detail = self.stock_list.pop()
                 check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':
@@ -110,12 +119,14 @@ class TickerTodayPriceSpider(scrapy.Spider):
 
         if not response.body:
 
-            json_string = json.dumps(self.val)
-            post = {'$set': {'id': self.stock_id, 'date': self.date, 'data': json_string}}
-            query = {'id': self.stock_id, 'date': self.date}
-
-            #print(post)
-            post_id = ticker_price.update_one(query, post, True)
+            cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (self.stock_id,self.date))
+            dp = cursor.fetchone()    
+            if dp is None:
+                json_string = json.dumps(self.val)            
+                postgres_insert_query = "INSERT INTO ticker_price (id,date,data) VALUES (%s,%s,%s)"
+                record_to_insert = (self.stock_id, self.date, json_string,)
+                cursor.execute(postgres_insert_query, record_to_insert)
+                connection.commit()
 
             self.val = []
 
@@ -124,8 +135,10 @@ class TickerTodayPriceSpider(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+  
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':
@@ -143,12 +156,12 @@ class TickerTodayPriceSpider(scrapy.Spider):
             
 class TickerTodayPriceSpider1(scrapy.Spider):
     name = 'ticker_today_price_spider_1'
-    fundamental = stock.fundamental
-    result = fundamental.find({'market':'1'}, no_cursor_timeout=True).sort("_id", -1)
-
+    
+    cursor.execute("SELECT * from public.fundamental where market='1' order by id DESC")
+    result = cursor.fetchall()
     stock_list = []
     for stock_detail in result:
-        stock_list.append([stock_detail['id'],stock_detail['market']])
+        stock_list.append([stock_detail[0],stock_detail[1]])
 
     start_urls = ['http://gu.qq.com/sh000001/zs']
     date = ""
@@ -166,8 +179,9 @@ class TickerTodayPriceSpider1(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':
@@ -218,12 +232,14 @@ class TickerTodayPriceSpider1(scrapy.Spider):
 
         if not response.body:
 
-            json_string = json.dumps(self.val)
-            post = {'$set': {'id': self.stock_id, 'date': self.date, 'data': json_string}}
-            query = {'id': self.stock_id, 'date': self.date}
-
-            #print(post)
-            post_id = ticker_price.update_one(query, post, True)
+            cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (self.stock_id,self.date))
+            dp = cursor.fetchone()    
+            if dp is None:
+                json_string = json.dumps(self.val)            
+                postgres_insert_query = "INSERT INTO ticker_price (id,date,data) VALUES (%s,%s,%s)"
+                record_to_insert = (self.stock_id, self.date, json_string,)
+                cursor.execute(postgres_insert_query, record_to_insert)
+                connection.commit()
 
             self.val = []
 
@@ -232,8 +248,9 @@ class TickerTodayPriceSpider1(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':
@@ -251,12 +268,12 @@ class TickerTodayPriceSpider1(scrapy.Spider):
             
 class TickerTodayPriceSpider2(scrapy.Spider):
     name = 'ticker_today_price_spider_2'
-    fundamental = stock.fundamental
-    result = fundamental.find({'market':'2'}, no_cursor_timeout=True).sort("_id", -1)
-
+    
+    cursor.execute("SELECT * from public.fundamental where market='2' order by id ASC")
+    result = cursor.fetchall()
     stock_list = []
     for stock_detail in result:
-        stock_list.append([stock_detail['id'],stock_detail['market']])
+        stock_list.append([stock_detail[0],stock_detail[1]])
 
     start_urls = ['http://gu.qq.com/sh000001/zs']
     date = ""
@@ -274,8 +291,9 @@ class TickerTodayPriceSpider2(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':
@@ -326,12 +344,14 @@ class TickerTodayPriceSpider2(scrapy.Spider):
 
         if not response.body:
 
-            json_string = json.dumps(self.val)
-            post = {'$set': {'id': self.stock_id, 'date': self.date, 'data': json_string}}
-            query = {'id': self.stock_id, 'date': self.date}
-
-            #print(post)
-            post_id = ticker_price.update_one(query, post, True)
+            cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (self.stock_id,self.date))
+            dp = cursor.fetchone()    
+            if dp is None:
+                json_string = json.dumps(self.val)            
+                postgres_insert_query = "INSERT INTO ticker_price (id,date,data) VALUES (%s,%s,%s)"
+                record_to_insert = (self.stock_id, self.date, json_string,)
+                cursor.execute(postgres_insert_query, record_to_insert)
+                connection.commit()
 
             self.val = []
 
@@ -340,8 +360,9 @@ class TickerTodayPriceSpider2(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':
@@ -359,12 +380,12 @@ class TickerTodayPriceSpider2(scrapy.Spider):
             
 class TickerTodayPriceSpider3(scrapy.Spider):
     name = 'ticker_today_price_spider_3'
-    fundamental = stock.fundamental
-    result = fundamental.find({'market':'2'}, no_cursor_timeout=True).sort("_id", 1)
-
+    
+    cursor.execute("SELECT * from public.fundamental where market='2' order by id DESC")
+    result = cursor.fetchall()
     stock_list = []
     for stock_detail in result:
-        stock_list.append([stock_detail['id'],stock_detail['market']])
+        stock_list.append([stock_detail[0],stock_detail[1]])
 
     start_urls = ['http://gu.qq.com/sh000001/zs']
     date = ""
@@ -382,8 +403,9 @@ class TickerTodayPriceSpider3(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':
@@ -434,12 +456,14 @@ class TickerTodayPriceSpider3(scrapy.Spider):
 
         if not response.body:
 
-            json_string = json.dumps(self.val)
-            post = {'$set': {'id': self.stock_id, 'date': self.date, 'data': json_string}}
-            query = {'id': self.stock_id, 'date': self.date}
-
-            #print(post)
-            post_id = ticker_price.update_one(query, post, True)
+            cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (self.stock_id,self.date))
+            dp = cursor.fetchone()    
+            if dp is None:
+                json_string = json.dumps(self.val)            
+                postgres_insert_query = "INSERT INTO ticker_price (id,date,data) VALUES (%s,%s,%s)"
+                record_to_insert = (self.stock_id, self.date, json_string,)
+                cursor.execute(postgres_insert_query, record_to_insert)
+                connection.commit()
 
             self.val = []
 
@@ -448,8 +472,9 @@ class TickerTodayPriceSpider3(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                cursor.execute("SELECT * from public.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
+                dp = cursor.fetchone()
+                if dp is None or dp[2] == '[]':
                     loop = False
 
             if stock_detail[1] == '2':

@@ -24,7 +24,6 @@ runner = CrawlerRunner()
 @defer.inlineCallbacks
 def crawl():
     yield runner.crawl(full_price_update.FullPriceSpider())
-    #yield runner.crawl(ticker.TickerTodayPriceSpider())
     reactor.stop()
 
 crawl()
