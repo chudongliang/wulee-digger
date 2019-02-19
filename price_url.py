@@ -12,34 +12,16 @@ driver = webdriver.Chrome(desired_capabilities=caps)
 ## TODO: probably die for the timeout issue
 driver.set_page_load_timeout(600)
 
+from common.db import Postgres
+db = Postgres()
 
-connection = psycopg2.connect(user="postgres",
-                                  password="cmhorse888",
-                                  host="127.0.0.1",
-                                  port="5432",
-                                  database="stock")
-cursor = connection.cursor()
-
-client = MongoClient('127.0.0.1', 27017)
-
-db = client.temporary
-collection = db.price_url
-db.price_url.create_index('id', unique=True)
-
-stock = client.stock
-fundamental = stock.fundamental
-
-#sql = "SELECT * from public.fundamental"
-cursor.execute("SELECT * from public.fundamental")
-rows = cursor.fetchall()
-
+rows = db.fetchall("SELECT * from source.fundamental")
 for v in rows:
     
     id = v[0]
     market = v[1]
     
-    cursor.execute("SELECT * from public.price_url where id=%s", (id,))
-    priceurl = cursor.fetchone()
+    priceurl = db.fetchone("SELECT * from source.price_url where id=%s", (id,))
     
     if priceurl is None:
         if market == '1':
@@ -63,12 +45,11 @@ for v in rows:
             #post = {'$set': {'id': v['id'] ,'url': matchUrlString}}
             #query = {'id': v['id']}
             
-            postgres_insert_query = "INSERT INTO price_url VALUES (%s,%s)"
-
-            record_to_insert = (id, matchUrlString)
-            cursor.execute(postgres_insert_query, record_to_insert)
-            connection.commit()
-            count = cursor.rowcount
+            postgres_insert_query = "INSERT INTO source.price_url (id,url) VALUES (%s,%s)"
+            record_to_insert = (v[0], matchUrlString)
+            db.insert(postgres_insert_query, record_to_insert)
+               
+            db.commit()
 
             #post_id = collection.update_one(query, post, True)
             #print(post_id)

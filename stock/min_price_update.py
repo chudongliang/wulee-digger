@@ -29,7 +29,7 @@ connection = psycopg2.connect(user="postgres",
                                   password="cmhorse888",
                                   host="127.0.0.1",
                                   port="5432",
-                                  database="stock")
+                                  database="wulee")
 cursor = connection.cursor()
 
 #from data.stock.min_price import MinPrice
@@ -40,7 +40,7 @@ class MinPriceDailySpider(scrapy.Spider):
 
     start_urls = []
     
-    cursor.execute("SELECT * from public.price_url")
+    cursor.execute("SELECT * from source.price_url")
     rows = cursor.fetchall()
     
     for v in rows:
@@ -89,12 +89,12 @@ class MinPriceDailySpider(scrapy.Spider):
             
                     #print(date_time)
                     #exit()
-                    cursor.execute("SELECT * from public.min_price where id=%s AND date=%s", (stock_id,date_time))
+                    cursor.execute("SELECT * from source.min_price where id=%s AND date=%s", (stock_id,date_time))
                     dp = cursor.fetchone()
                 
                     if dp is None:
             
-                        postgres_insert_query = "INSERT INTO min_price (id,date,open,close,high,low,volume,amount) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+                        postgres_insert_query = "INSERT INTO source.min_price (id,date,open,close,high,low,volume,amount) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
                         record_to_insert = (stock_id, date_time, open, close, high, low, float(row[6].decode('utf-8')), float(row[7].decode('utf-8')),)
                         
                       
