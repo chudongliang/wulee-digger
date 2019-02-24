@@ -26,7 +26,7 @@ connection = psycopg2.connect(user="postgres",
                                   password="cmhorse888",
                                   host="127.0.0.1",
                                   port="5432",
-                                  database="stock")
+                                  database="wulee")
 cursor = connection.cursor()
 
 
@@ -42,7 +42,7 @@ class FullPriceSpider(scrapy.Spider):
     start_urls = []
     
     
-    cursor.execute("SELECT * from public.price_url")
+    cursor.execute("SELECT * from source.price_url")
     rows = cursor.fetchall()
     
     
@@ -68,15 +68,9 @@ class FullPriceSpider(scrapy.Spider):
                 item = k.split(b',')
 
                 datestring = item[0].decode('utf-8').split('-')
-                date = datetime.date(int(datestring[0]), int(datestring[1]), int(datestring[2]))
-
-      
-
-                #query = {'id': code.decode('utf-8'), 'date': date}
-                #exist = daily_price.find_one(query)
-            
+                date = datetime.date(int(datestring[0]), int(datestring[1]), int(datestring[2]))            
                 
-                cursor.execute("SELECT * from public.daily_price where id=%s AND date=%s", (code.decode('utf-8'),date))
+                cursor.execute("SELECT * from source.daily_price where id=%s AND date=%s", (code.decode('utf-8'),date))
                 dp = cursor.fetchone()
                 
                 if dp is None:
@@ -91,7 +85,7 @@ class FullPriceSpider(scrapy.Spider):
                             , 'amplitude': item[7].decode('utf-8')
                             , 'turnover': item[8].decode('utf-8')} }
                         
-                        postgres_insert_query = "INSERT INTO daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                        postgres_insert_query = "INSERT INTO source.daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                         record_to_insert = (code.decode('utf-8'), date, item[1].decode('utf-8'), item[2].decode('utf-8'), item[3].decode('utf-8'), item[4].decode('utf-8'), item[5].decode('utf-8'), item[6].decode('utf-8'), item[8].decode('utf-8') ,item[7].decode('utf-8'),)
                     else:
                         post = {'$set': {'id': code.decode('utf-8'), 'date': date
@@ -104,7 +98,7 @@ class FullPriceSpider(scrapy.Spider):
                             , 'amplitude': item[7].decode('utf-8')
                             , 'turnover': ''}}
                     
-                        postgres_insert_query = "INSERT INTO daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                        postgres_insert_query = "INSERT INTO source.daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                         record_to_insert = (code.decode('utf-8'), date, item[1].decode('utf-8'), item[2].decode('utf-8'), item[3].decode('utf-8'), item[4].decode('utf-8'), item[5].decode('utf-8'), item[6].decode('utf-8'), 0 ,item[7].decode('utf-8'),)
                     #postgres_insert_query = "INSERT INTO daily_price (id,date,open,close,high,low,volume,amount,turnover,amplitude) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                     #record_to_insert = (code.decode('utf-8'), date, item[1].decode('utf-8'), item[2].decode('utf-8'), item[3].decode('utf-8'), item[4].decode('utf-8'), item[5].decode('utf-8'), item[6].decode('utf-8'), 0 ,item[7].decode('utf-8'),)

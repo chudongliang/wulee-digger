@@ -1,0 +1,131 @@
+-- Table: source.fundamental
+
+-- DROP TABLE source.fundamental;
+
+CREATE TABLE source.fundamental
+(
+    id character varying(6) COLLATE pg_catalog."default" NOT NULL,
+    market character varying(2) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT fundamental_pkey PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE source.fundamental
+    OWNER to postgres;
+    
+-- Table: public.price_url
+
+-- DROP TABLE public.price_url;
+
+CREATE TABLE source.price_url
+(
+    id character varying(6) COLLATE pg_catalog."default" NOT NULL,
+    url text COLLATE pg_catalog."default",
+    CONSTRAINT price_url_pkey PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE source.price_url
+    OWNER to postgres;    
+    
+-- Table: source.daily_price
+
+-- DROP TABLE source.daily_price;
+
+CREATE TABLE source.daily_price
+(
+    date date NOT NULL,
+    open real,
+    close real,
+    high real,
+    low real,
+    volume bigint,
+    amount bigint,
+    turnover real,
+    id character varying(6) COLLATE pg_catalog."default",
+    amplitude character varying(12) COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE source.daily_price
+    OWNER to postgres;
+
+-- Index: id_date
+
+-- DROP INDEX source.id_date;
+
+CREATE UNIQUE INDEX id_date
+    ON source.daily_price USING btree
+    (date, id COLLATE pg_catalog."default")
+    TABLESPACE pg_default;
+    
+    
+-- Table: source.min_price
+
+-- DROP TABLE source.min_price;
+
+CREATE TABLE source.min_price
+(
+    id character varying(6) COLLATE pg_catalog."default" NOT NULL,
+    open real,
+    close real,
+    high real,
+    low real,
+    volume real,
+    amount real,
+    date timestamp with time zone
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE source.min_price
+    OWNER to postgres;
+
+-- Index: time_id
+
+-- DROP INDEX source.time_id;
+
+CREATE UNIQUE INDEX time_id
+    ON source.min_price USING btree
+    (id COLLATE pg_catalog."default", date)
+    TABLESPACE pg_default;
+    
+    
+-- Table: source.ticker_price
+
+-- DROP TABLE source.ticker_price;
+
+CREATE TABLE source.ticker_price
+(
+    date date,
+    id character varying(6) COLLATE pg_catalog."default",
+    data text COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE source.ticker_price
+    OWNER to postgres;
+
+-- Index: ticker_price_id_date
+
+-- DROP INDEX source.ticker_price_id_date;
+
+CREATE UNIQUE INDEX ticker_price_id_date
+    ON source.ticker_price USING btree
+    (id COLLATE pg_catalog."default", date)
+    TABLESPACE pg_default;

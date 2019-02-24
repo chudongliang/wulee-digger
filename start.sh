@@ -2,13 +2,11 @@
 
 cd /Users/ChuE/wulee-digger
 
-
-
 # refresh fundamental
-/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 main.py 
+/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 fundamental.py 
 
 # refresh update url for missing one
-/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 test.py 
+/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 price_url.py 
 
 sleep 500
 
