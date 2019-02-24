@@ -10,3 +10,7 @@ http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?type=CT&cmd=C._A&
   update tickerprice
   
   
+issues:
+
+1. unlisted company will not in fundamental updates.
+2. 
