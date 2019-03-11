@@ -15,11 +15,9 @@ import psycopg2
 
 import settings
 import datetime
-client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
+
 
 from data.stock.daily_price import DailyPrice
-db = client.temporary
-collection = db.price_url
 
 
 connection = psycopg2.connect(user="postgres",
@@ -29,11 +27,6 @@ connection = psycopg2.connect(user="postgres",
                                   database="wulee")
 cursor = connection.cursor()
 
-
-
-stock = client.stock
-daily_price = stock.daily_price
-daily_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
 class FullPriceSpider(scrapy.Spider):
 

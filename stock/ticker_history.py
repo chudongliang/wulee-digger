@@ -14,7 +14,7 @@ import json
 import gzip
 import ast
 import sys
-
+import psycopg2
 #import settings
 #client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
 
@@ -23,40 +23,49 @@ db = client.temporary
 collection = db.price_url
 import datetime
 
-class LakmeSampleItem(scrapy.Item):
-    urls = scrapy.Field()
-
 stock = client.stock
 ticker_price = stock.ticker_price
 ticker_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
 
+from common.db import Postgres
+
+db = Postgres()
+
 class TickerPriceSpider(scrapy.Spider):
 
     name = 'ticker_price_spider'
 
-    start_date = datetime.datetime(2019, 1, 20)
-    end_date = datetime.datetime(2019, 2, 2)
+    #start_date = datetime.datetime(2019, 1, 20)
+    #end_date = datetime.datetime(2019, 2, 2)
 
-    daily_price = stock.daily_price
-    daily_price = daily_price.find({'date': {'$gt': start_date, '$lt': end_date}}, no_cursor_timeout=True).sort('date',1)
-
+    #print(start_date)
+    #exit
+    #daily_price = stock.daily_price
+    #daily_price = daily_price.find({'date': {'$gt': start_date, '$lt': end_date}}, no_cursor_timeout=True).sort('date',1)
+    
+    daily_price = db.fetchall("SELECT * from source.daily_price where date>'2019-01-01' AND date<'2019-03-02' order by date DESC")
+        
 
     crawl_date = []
     for v in daily_price:
-        crawl_date.append([v['date'],v['id']])
+        crawl_date.append([v[0],v[8]])
 
     loop = True
     while loop:
         stock_detail = crawl_date.pop()
         date_string = str(stock_detail[0]).split(" ")
 
-        check_exist = ticker_price.find_one({'id': stock_detail[1], 'date': date_string[0]}, no_cursor_timeout=True)
-        if not check_exist or check_exist['data'] == '[]':
+        #check_exist = ticker_price.find_one({'id': stock_detail[1], 'date': date_string[0]}, no_cursor_timeout=True)
+        check_exist = db.fetchone("SELECT * from source.ticker_price where id=%s AND date=%s", (stock_detail[1],stock_detail[0],))
+        
+        if check_exist is None or check_exist[2] == '[]':
+        #if not check_exist or check_exist['data'] == '[]':
             loop = False
 
     stock_id = stock_detail[1]
     stock_date = date_string[0]
+    
     i = 1
     page = str(i)
 
@@ -107,9 +116,17 @@ class TickerPriceSpider(scrapy.Spider):
         else:
 
             json_string = json.dumps(self.val)
-            post = {'$set': {'id': self.stock_id, 'date': self.stock_date, 'data': json_string}}
-            query = {'id': self.stock_id, 'date': self.stock_date}
-            post_id = ticker_price.update_one(query, post, True)
+            #post = {'$set': {'id': self.stock_id, 'date': self.stock_date, 'data': json_string}}
+            #query = {'id': self.stock_id, 'date': self.stock_date}
+            
+            postgres_insert_query = "INSERT INTO source.ticker_price (id,date,data) VALUES (%s,%s,%s)"
+            record_to_insert = (self.stock_id, self.stock_date, json_string,)
+            db.insert(postgres_insert_query, record_to_insert)
+            db.commit()
+            
+            #print(json_string)
+            #exit()
+            #post_id = ticker_price.update_one(query, post, True)
 
             self.val = []
             self.i = 1

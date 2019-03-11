@@ -14,14 +14,6 @@ import sys
 
 import settings
 import datetime
-client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
-
-db = client.temporary
-collection = db.price_url
-
-db1 = client.stock
-min_price = db1.min_price
-min_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
 import psycopg2
 

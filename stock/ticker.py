@@ -15,20 +15,11 @@ import gzip
 import ast
 import sys
 
-#import settings
-#client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
 
-client = MongoClient("127.0.0.1",27017)
-db = client.temporary
-collection = db.price_url
 import datetime
 
 class LakmeSampleItem(scrapy.Item):
     urls = scrapy.Field()
-
-stock = client.stock
-ticker_price = stock.ticker_price
-ticker_price.create_index( [("id", 1), ("date", 1)], unique=True)
 
 import psycopg2
 connection = psycopg2.connect(user="postgres",

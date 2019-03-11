@@ -23,8 +23,6 @@ for v in fundamental.find({},no_cursor_timeout=True):
     start = datetime.datetime(2018, 12, 17, 0, 0, 0)
     end = datetime.datetime(2018, 12, 18, 0, 0, 0)
     
-
-    
     if not min_price.count({'id': v['id'], 'date': {'$gte' : start,'$lte' : end}}) == 240:
         print(v['id'])
         try:
