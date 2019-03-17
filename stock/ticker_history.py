@@ -18,15 +18,7 @@ import psycopg2
 #import settings
 #client = MongoClient(settings.MONGO_HOSTNAME, settings.MONGO_PORT)
 
-client = MongoClient("127.0.0.1",27017)
-db = client.temporary
-collection = db.price_url
 import datetime
-
-stock = client.stock
-ticker_price = stock.ticker_price
-ticker_price.create_index( [("id", 1), ("date", 1)], unique=True)
-
 
 from common.db import Postgres
 
@@ -135,8 +127,10 @@ class TickerPriceSpider(scrapy.Spider):
             while loop:
                 stock_detail = self.crawl_date.pop()
                 date_string = str(stock_detail[0]).split(" ")
-                check_exist = ticker_price.find_one({'id': stock_detail[1], 'date': date_string[0]},no_cursor_timeout=True)
-                if not check_exist or check_exist['data'] == '[]':
+                #check_exist = ticker_price.find_one({'id': stock_detail[1], 'date': date_string[0]},no_cursor_timeout=True)
+                
+                check_exist = db.fetchone("SELECT * from source.ticker_price where id=%s AND date=%s", (stock_detail[1],stock_detail[0],))
+                if check_exist is None or check_exist[2] == '[]':
                     loop = False
 
             self.stock_id = stock_detail[1]
