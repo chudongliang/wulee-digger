@@ -55,8 +55,6 @@ class TickerTodayPriceSpider(scrapy.Spider):
             loop = True
             while loop:
                 stock_detail = self.stock_list.pop()
-                check_exist = ticker_price.find_one({'id': stock_detail[0], 'date': self.date}, no_cursor_timeout=True)
-                
                 cursor.execute("SELECT * from source.ticker_price where id=%s AND date=%s", (stock_detail[0],self.date,))
                 dp = cursor.fetchone()
                 if dp is None or dp[2] == '[]':
